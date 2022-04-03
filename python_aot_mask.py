@@ -83,8 +83,8 @@ def make_full_size(x, output_sz):
 
 
 
-IMAGE_SIZE = (500, 500)
-downsample = False
+IMAGE_SIZE = (480, 480)
+downsample = True
 
 handle = vot_utils.VOT("mask")
 selection = handle.region()
@@ -100,7 +100,7 @@ mask_size = mask.shape
 # downsample
 if downsample:
     image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
-    mask = cv2.resize(mask, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
+    mask = F.interpolate(torch.tensor(mask)[None, None, :, :], size=IMAGE_SIZE, mode="nearest").numpy().astype(np.uint8)[0][0]
 
 # build vos engine
 engine_config = importlib.import_module('configs.' + 'pre_ytb_dav')
@@ -118,6 +118,6 @@ while True:
         image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
     m, confidence = tracker.track(image)
     if downsample:
-        m = cv2.resize(m, mask_size, interpolation=cv2.INTER_NEAREST)
+        m = F.interpolate(torch.tensor(m)[None, None, :, :], size=mask_size, mode="nearest").numpy().astype(np.uint8)[0][0]
     handle.report(m, confidence)
 
