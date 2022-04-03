@@ -82,16 +82,25 @@ def make_full_size(x, output_sz):
     return np.pad(x, ((0, pad_y), (0, pad_x)), 'constant', constant_values=0)
 
 
+
+IMAGE_SIZE = (500, 500)
+downsample = False
+
 handle = vot_utils.VOT("mask")
 selection = handle.region()
 imagefile = handle.frame()
 if not imagefile:
     sys.exit(0)
+    
 
 image = cv2.imread(imagefile, cv2.IMREAD_UNCHANGED)
-# mask given by the toolkit ends with the target (zero-padding to the right and down is needed)
-
 mask = make_full_size(selection, (image.shape[1], image.shape[0]))
+mask_size = mask.shape
+
+# downsample
+if downsample:
+    image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
+    mask = cv2.resize(mask, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
 
 # build vos engine
 engine_config = importlib.import_module('configs.' + 'pre_ytb_dav')
@@ -104,8 +113,11 @@ while True:
     imagefile = handle.frame()
     if not imagefile:
         break
-
     image = cv2.imread(imagefile, cv2.IMREAD_UNCHANGED)
+    if downsample:
+        image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
     m, confidence = tracker.track(image)
+    if downsample:
+        m = cv2.resize(m, mask_size, interpolation=cv2.INTER_NEAREST)
     handle.report(m, confidence)
 
