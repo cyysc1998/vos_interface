@@ -29,6 +29,6 @@ sys.path.append(AOT_PATH)
 
 
 
-## File sructure
+## File structure
 ![](./asserts/struct.png)
 

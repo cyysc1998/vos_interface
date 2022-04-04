@@ -83,7 +83,6 @@ def make_full_size(x, output_sz):
 
 
 
-IMAGE_SIZE = (480, 480)
 downsample = True
 
 handle = vot_utils.VOT("mask")
@@ -92,14 +91,15 @@ imagefile = handle.frame()
 if not imagefile:
     sys.exit(0)
     
-
 image = cv2.imread(imagefile, cv2.IMREAD_UNCHANGED)
+IMAGE_SIZE = (480, int(480 * image.shape[1] / image.shape[0]))
+# IMAGE_SIZE = (480, 480)
 mask = make_full_size(selection, (image.shape[1], image.shape[0]))
 mask_size = mask.shape
-
 # downsample
 if downsample:
-    image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
+    # image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
+    image = F.interpolate(torch.tensor(image)[None, None, :, :, :], size=(480, int(480 * image.shape[1] / image.shape[0]), 3), mode="nearest").numpy().astype(np.uint8)[0][0]
     mask = F.interpolate(torch.tensor(mask)[None, None, :, :], size=IMAGE_SIZE, mode="nearest").numpy().astype(np.uint8)[0][0]
 
 # build vos engine
@@ -115,7 +115,8 @@ while True:
         break
     image = cv2.imread(imagefile, cv2.IMREAD_UNCHANGED)
     if downsample:
-        image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
+        # image = cv2.resize(image, IMAGE_SIZE, interpolation=cv2.INTER_NEAREST)
+        image = F.interpolate(torch.tensor(image)[None, None, :, :, :], size=(480, int(480 * image.shape[1] / image.shape[0]), 3), mode="nearest").numpy().astype(np.uint8)[0][0]
     m, confidence = tracker.track(image)
     if downsample:
         m = F.interpolate(torch.tensor(m)[None, None, :, :], size=mask_size, mode="nearest").numpy().astype(np.uint8)[0][0]
