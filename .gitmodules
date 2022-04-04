@@ -1,0 +1,3 @@
+[submodule "aot"]
+	path = aot
+	url = https://github.com/yoxu515/aot-benchmark.git
